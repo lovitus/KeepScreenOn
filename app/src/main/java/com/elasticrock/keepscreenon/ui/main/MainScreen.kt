@@ -14,6 +14,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -32,10 +33,8 @@ import androidx.compose.material.icons.filled.AddModerator
 import androidx.compose.material.icons.filled.AutoAwesomeMosaic
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.DashboardCustomize
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.EnergySavingsLeaf
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
@@ -54,6 +53,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -76,6 +76,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elasticrock.keepscreenon.BuildConfig
 import com.elasticrock.keepscreenon.R
+import com.elasticrock.keepscreenon.data.model.KeepScreenOnState
 import com.elasticrock.keepscreenon.service.QSTileService
 import com.elasticrock.keepscreenon.ui.components.PreferenceItem
 import com.elasticrock.keepscreenon.ui.components.PreferenceSubtitle
@@ -100,10 +101,9 @@ fun MainScreen(
     val startPadding = displayCutout.calculateStartPadding(layoutDirection)
     val endPadding = displayCutout.calculateEndPadding(layoutDirection)
     val currentScreenTimeoutLabel = currentScreenTimeoutText(state.value.currentScreenTimeout)
-    val fabStateText = stringResource(
-        R.string.current_screen_timeout_summary,
-        compactTimeoutText(state.value.currentScreenTimeout)
-    )
+    val isKeepScreenOnActive = state.value.currentScreenTimeout == state.value.maxTimeout
+    val normalTimeoutText = normalTimeoutText(state.value.keepScreenOnState, state.value.currentScreenTimeout)
+    val keepScreenOnTimeoutText = compactTimeoutText(state.value.maxTimeout)
 
     LaunchedEffect(state.value.displayReviewPrompt) {
         @Suppress("KotlinConstantConditions", "SimplifyBooleanWithConstants")
@@ -138,36 +138,29 @@ fun MainScreen(
                     },
                     onClick = { context.startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply { data = ("package:" + context.packageName).toUri() } ) }
                 )
-            } else if (state.value.currentScreenTimeout == state.value.maxTimeout) {
-                ExtendedFloatingActionButton(
-                    text = {
-                        ActionButtonText(
-                            title = stringResource(R.string.tap_to_disable),
-                            subtitle = fabStateText
-                        )
-                    },
-                    icon = {
-                        Icon(imageVector = Icons.Filled.LightMode, contentDescription = null)
-                    },
-                    onClick = {
-                        viewModel.onKeepScreenOnDisabled()
-                    }
-                )
             } else {
                 ExtendedFloatingActionButton(
-                    text = {
-                        ActionButtonText(
-                            title = stringResource(R.string.tap_to_keep_screen_on),
-                            subtitle = fabStateText
-                        )
-                    },
-                    icon = {
-                        Icon(imageVector = Icons.Filled.DarkMode, contentDescription = null)
-                    },
                     onClick = {
-                        viewModel.onKeepScreenOnEnabled()
+                        if (isKeepScreenOnActive) {
+                            viewModel.onKeepScreenOnDisabled()
+                        } else {
+                            viewModel.onKeepScreenOnEnabled()
+                        }
                     }
-                )
+                ) {
+                    TimeoutSwitchText(
+                        normalTimeout = normalTimeoutText,
+                        keepScreenOnTimeout = keepScreenOnTimeoutText,
+                        checked = isKeepScreenOnActive,
+                        onCheckedChange = { checked ->
+                            if (checked) {
+                                viewModel.onKeepScreenOnEnabled()
+                            } else {
+                                viewModel.onKeepScreenOnDisabled()
+                            }
+                        }
+                    )
+                }
             }
         },
         floatingActionButtonPosition = FabPosition.Center,
@@ -471,15 +464,27 @@ fun MainScreen(
 }
 
 @Composable
-private fun ActionButtonText(
-    title: String,
-    subtitle: String
+private fun TimeoutSwitchText(
+    normalTimeout: String,
+    keepScreenOnTimeout: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.Start) {
-        Text(text = title)
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Text(
-            text = subtitle,
-            style = MaterialTheme.typography.labelSmall
+            text = normalTimeout,
+            style = MaterialTheme.typography.labelLarge
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
+        Text(
+            text = keepScreenOnTimeout,
+            style = MaterialTheme.typography.labelLarge
         )
     }
 }
@@ -493,6 +498,19 @@ private fun currentScreenTimeoutText(screenTimeout: Int): String {
         screenTimeout == Int.MAX_VALUE -> stringResource(R.string.always_on)
         else -> pluralStringResource(R.plurals.day, screenTimeout / 86400000, screenTimeout / 86400000)
     }
+}
+
+@Composable
+private fun normalTimeoutText(
+    keepScreenOnState: KeepScreenOnState,
+    currentScreenTimeout: Int
+): String {
+    val normalTimeout = when (keepScreenOnState) {
+        is KeepScreenOnState.Enabled -> keepScreenOnState.previousTimeout
+        is KeepScreenOnState.Disabled -> keepScreenOnState.currentTimeout
+        KeepScreenOnState.PermissionNotGranted -> currentScreenTimeout
+    }
+    return compactTimeoutText(normalTimeout)
 }
 
 @Composable
