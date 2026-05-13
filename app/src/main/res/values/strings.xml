@@ -68,11 +68,11 @@
     <string name="disable">Disable</string>
     <string name="tap_to_disable">Tap To Disable</string>
     <string name="tap_to_keep_screen_on">Tap To Keep Screen On</string>
-    <string name="current_screen_timeout_summary">Current:%1$s/%2$s</string>
+    <string name="current_screen_timeout_summary">Current:%1$s -> %2$s</string>
     <string name="compact_seconds">%ds</string>
     <string name="compact_minutes">%dm</string>
-    <string name="compact_hours">%dh</string>
-    <string name="compact_days">%dd</string>
+    <string name="compact_hours">%dhour</string>
+    <string name="compact_days">%dday</string>
     <string name="widget">Widget</string>
     <string name="widget_description">Enable and disable Keep Screen On</string>
     <string name="add_widget_to_home_screen">Add widget to home screen</string>

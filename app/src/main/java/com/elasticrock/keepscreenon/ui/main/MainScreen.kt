@@ -74,8 +74,9 @@ import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elasticrock.keepscreenon.BuildConfig
-import com.elasticrock.keepscreenon.service.QSTileService
 import com.elasticrock.keepscreenon.R
+import com.elasticrock.keepscreenon.data.model.KeepScreenOnState
+import com.elasticrock.keepscreenon.service.QSTileService
 import com.elasticrock.keepscreenon.ui.components.PreferenceItem
 import com.elasticrock.keepscreenon.ui.components.PreferenceSubtitle
 import com.elasticrock.keepscreenon.ui.components.PreferenceSwitch
@@ -99,13 +100,7 @@ fun MainScreen(
     val startPadding = displayCutout.calculateStartPadding(layoutDirection)
     val endPadding = displayCutout.calculateEndPadding(layoutDirection)
     val currentScreenTimeoutLabel = currentScreenTimeoutText(state.value.currentScreenTimeout)
-    val compactCurrentScreenTimeoutText = compactTimeoutText(state.value.currentScreenTimeout)
-    val compactMaxTimeoutText = compactTimeoutText(state.value.maxTimeout)
-    val fabStateText = stringResource(
-        R.string.current_screen_timeout_summary,
-        compactCurrentScreenTimeoutText,
-        compactMaxTimeoutText
-    )
+    val fabStateText = actionButtonStateText(state.value.keepScreenOnState)
 
     LaunchedEffect(state.value.displayReviewPrompt) {
         @Suppress("KotlinConstantConditions", "SimplifyBooleanWithConstants")
@@ -494,6 +489,23 @@ private fun currentScreenTimeoutText(screenTimeout: Int): String {
         screenTimeout < 86400000 -> pluralStringResource(R.plurals.hour, screenTimeout / 3600000, screenTimeout / 3600000)
         screenTimeout == Int.MAX_VALUE -> stringResource(R.string.always_on)
         else -> pluralStringResource(R.plurals.day, screenTimeout / 86400000, screenTimeout / 86400000)
+    }
+}
+
+@Composable
+private fun actionButtonStateText(keepScreenOnState: KeepScreenOnState): String {
+    return when (keepScreenOnState) {
+        is KeepScreenOnState.Disabled -> stringResource(
+            R.string.current_screen_timeout_summary,
+            compactTimeoutText(keepScreenOnState.currentTimeout),
+            compactTimeoutText(keepScreenOnState.maximumTimeout)
+        )
+        is KeepScreenOnState.Enabled -> stringResource(
+            R.string.current_screen_timeout_summary,
+            compactTimeoutText(keepScreenOnState.currentTimeout),
+            compactTimeoutText(keepScreenOnState.previousTimeout)
+        )
+        KeepScreenOnState.PermissionNotGranted -> ""
     }
 }
 
