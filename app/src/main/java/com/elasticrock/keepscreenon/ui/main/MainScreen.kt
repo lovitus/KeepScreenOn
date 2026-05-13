@@ -61,6 +61,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -97,6 +98,14 @@ fun MainScreen(
     val displayCutout = WindowInsets.displayCutout.asPaddingValues()
     val startPadding = displayCutout.calculateStartPadding(layoutDirection)
     val endPadding = displayCutout.calculateEndPadding(layoutDirection)
+    val currentScreenTimeoutLabel = currentScreenTimeoutText(state.value.currentScreenTimeout)
+    val compactCurrentScreenTimeoutText = compactTimeoutText(state.value.currentScreenTimeout)
+    val compactMaxTimeoutText = compactTimeoutText(state.value.maxTimeout)
+    val fabStateText = stringResource(
+        R.string.current_screen_timeout_summary,
+        compactCurrentScreenTimeoutText,
+        compactMaxTimeoutText
+    )
 
     LaunchedEffect(state.value.displayReviewPrompt) {
         @Suppress("KotlinConstantConditions", "SimplifyBooleanWithConstants")
@@ -134,7 +143,10 @@ fun MainScreen(
             } else if (state.value.currentScreenTimeout == state.value.maxTimeout) {
                 ExtendedFloatingActionButton(
                     text = {
-                        Text(stringResource(R.string.disable))
+                        ActionButtonText(
+                            title = stringResource(R.string.tap_to_disable),
+                            subtitle = fabStateText
+                        )
                     },
                     icon = {
                         Icon(imageVector = Icons.Filled.NoEncryption, contentDescription = null)
@@ -146,7 +158,10 @@ fun MainScreen(
             } else {
                 ExtendedFloatingActionButton(
                     text = {
-                        Text(stringResource(R.string.keep_screen_on))
+                        ActionButtonText(
+                            title = stringResource(R.string.tap_to_keep_screen_on),
+                            subtitle = fabStateText
+                        )
                     },
                     icon = {
                         Icon(imageVector = Icons.Filled.Lock, contentDescription = null)
@@ -164,19 +179,8 @@ fun MainScreen(
                 modifier = Modifier.padding(start = startPadding, end = endPadding)
             ) {
                 item {
-                    val screenTimeout = state.value.currentScreenTimeout
                     Text(
-                        text = if (screenTimeout < 60000) {
-                            stringResource(R.string.current_screen_timeout) + pluralStringResource(R.plurals.second, screenTimeout/1000, screenTimeout/1000)
-                        } else if (screenTimeout < 3600000) {
-                            stringResource(R.string.current_screen_timeout) + pluralStringResource(R.plurals.minute, screenTimeout/60000, screenTimeout/60000)
-                        } else if (screenTimeout < 86400000) {
-                            stringResource(R.string.current_screen_timeout) + pluralStringResource(R.plurals.hour, screenTimeout/3600000, screenTimeout/3600000)
-                        } else if (screenTimeout == Int.MAX_VALUE) {
-                            stringResource(R.string.current_screen_timeout) + stringResource(R.string.always_on)
-                        } else {
-                            stringResource(R.string.current_screen_timeout) + pluralStringResource(R.plurals.day, screenTimeout/86400000, screenTimeout/86400000)
-                        },
+                        text = currentScreenTimeoutLabel,
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -466,4 +470,40 @@ fun MainScreen(
             }
         }
     )
+}
+
+@Composable
+private fun ActionButtonText(
+    title: String,
+    subtitle: String
+) {
+    Column(horizontalAlignment = Alignment.Start) {
+        Text(text = title)
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.labelSmall
+        )
+    }
+}
+
+@Composable
+private fun currentScreenTimeoutText(screenTimeout: Int): String {
+    return stringResource(R.string.current_screen_timeout) + when {
+        screenTimeout < 60000 -> pluralStringResource(R.plurals.second, screenTimeout / 1000, screenTimeout / 1000)
+        screenTimeout < 3600000 -> pluralStringResource(R.plurals.minute, screenTimeout / 60000, screenTimeout / 60000)
+        screenTimeout < 86400000 -> pluralStringResource(R.plurals.hour, screenTimeout / 3600000, screenTimeout / 3600000)
+        screenTimeout == Int.MAX_VALUE -> stringResource(R.string.always_on)
+        else -> pluralStringResource(R.plurals.day, screenTimeout / 86400000, screenTimeout / 86400000)
+    }
+}
+
+@Composable
+private fun compactTimeoutText(screenTimeout: Int): String {
+    return when {
+        screenTimeout < 60000 -> stringResource(R.string.compact_seconds, screenTimeout / 1000)
+        screenTimeout < 3600000 -> stringResource(R.string.compact_minutes, screenTimeout / 60000)
+        screenTimeout < 86400000 -> stringResource(R.string.compact_hours, screenTimeout / 3600000)
+        screenTimeout == Int.MAX_VALUE -> stringResource(R.string.always_on)
+        else -> stringResource(R.string.compact_days, screenTimeout / 86400000)
+    }
 }
