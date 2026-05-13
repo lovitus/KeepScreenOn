@@ -35,9 +35,10 @@ import androidx.compose.material.icons.filled.DashboardCustomize
 import androidx.compose.material.icons.filled.EnergySavingsLeaf
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.NoEncryption
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -146,7 +147,7 @@ fun MainScreen(
                         )
                     },
                     icon = {
-                        Icon(imageVector = Icons.Filled.NoEncryption, contentDescription = null)
+                        Icon(imageVector = Icons.Filled.VisibilityOff, contentDescription = null)
                     },
                     onClick = {
                         viewModel.onKeepScreenOnDisabled()
@@ -161,7 +162,7 @@ fun MainScreen(
                         )
                     },
                     icon = {
-                        Icon(imageVector = Icons.Filled.Lock, contentDescription = null)
+                        Icon(imageVector = Icons.Filled.Visibility, contentDescription = null)
                     },
                     onClick = {
                         viewModel.onKeepScreenOnEnabled()
