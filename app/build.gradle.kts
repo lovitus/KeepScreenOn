@@ -10,6 +10,17 @@ plugins {
     alias(libs.plugins.aboutlibs.android)
 }
 
+val signingKeystorePath = System.getenv("SIGNING_KEYSTORE_PATH")
+val signingKeystorePassword = System.getenv("SIGNING_KEYSTORE_PASSWORD")
+val signingKeyAlias = System.getenv("SIGNING_KEY_ALIAS")
+val signingKeyPassword = System.getenv("SIGNING_KEY_PASSWORD")
+val hasReleaseSigning = listOf(
+    signingKeystorePath,
+    signingKeystorePassword,
+    signingKeyAlias,
+    signingKeyPassword
+).all { !it.isNullOrBlank() }
+
 android {
     namespace = "com.elasticrock.keepscreenon"
     compileSdk = 36
@@ -28,10 +39,23 @@ android {
     androidResources {
         localeFilters += listOf("cs", "en-rUS", "en-rGB","el-rGR", "fr-rFR", "zh-rCN", "ar", "ja", "tr")
     }
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(signingKeystorePath!!)
+                storePassword = signingKeystorePassword
+                keyAlias = signingKeyAlias
+                keyPassword = signingKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                     getDefaultProguardFile("proguard-android-optimize.txt"),
                     "proguard-rules.pro"
