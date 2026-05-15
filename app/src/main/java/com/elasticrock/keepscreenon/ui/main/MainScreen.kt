@@ -392,27 +392,6 @@ fun MainScreen(
                 }
 
                 item {
-                    val screenTimeout = state.value.currentScreenTimeout
-                    Text(
-                        text = if (screenTimeout < 60000) {
-                            stringResource(R.string.current_screen_timeout) + pluralStringResource(R.plurals.second, screenTimeout/1000, screenTimeout/1000)
-                        } else if (screenTimeout < 3600000) {
-                            stringResource(R.string.current_screen_timeout) + pluralStringResource(R.plurals.minute, screenTimeout/60000, screenTimeout/60000)
-                        } else if (screenTimeout < 86400000) {
-                            stringResource(R.string.current_screen_timeout) + pluralStringResource(R.plurals.hour, screenTimeout/3600000, screenTimeout/3600000)
-                        } else if (screenTimeout == Int.MAX_VALUE) {
-                            stringResource(R.string.current_screen_timeout) + stringResource(R.string.always_on)
-                        } else {
-                            stringResource(R.string.current_screen_timeout) + pluralStringResource(R.plurals.day, screenTimeout/86400000, screenTimeout/86400000)
-                        },
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 18.dp, top = 24.dp, bottom = 12.dp),
-                    )
-                }
-
-                item {
                     Spacer(modifier = Modifier.size(80.dp))
                 }
             }
@@ -462,6 +441,20 @@ fun MainScreen(
                             .height(barHeight)
                     )
                 }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 4.dp, bottom = 2.dp),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                Text(
+                    text = "💡${compactTimeoutText(state.value.currentScreenTimeout)}",
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.42f),
+                    style = MaterialTheme.typography.labelSmall
+                )
             }
         }
     )
